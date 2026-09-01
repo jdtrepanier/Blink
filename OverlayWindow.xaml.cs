@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interop;
 using WinForms = System.Windows.Forms;
 
 namespace Blink;
@@ -41,21 +43,21 @@ public partial class OverlayWindow : Window
             : seconds.ToString();
     }
 
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
+
+    private const uint SwpNoZOrder = 0x0004;
+    private const uint SwpNoActivate = 0x0010;
+
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
-        // Screen bounds are in physical pixels; WPF positions in DIPs.
-        // Convert using this window's own device transform so mixed-DPI setups line up.
-        var source = PresentationSource.FromVisual(this);
-        var transform = source?.CompositionTarget?.TransformFromDevice ?? System.Windows.Media.Matrix.Identity;
-
+        // At this point the HWND still lives on whatever monitor it was created on, so this
+        // window's own DPI transform doesn't yet match the target screen. SetWindowPos takes
+        // physical pixels directly, sidestepping WPF's DIP conversion, so the window lands and
+        // sizes correctly on the target monitor even when it has a different DPI scale.
+        var hwnd = ((HwndSource)PresentationSource.FromVisual(this)!).Handle;
         var bounds = _screen.Bounds;
-        var topLeft = transform.Transform(new System.Windows.Point(bounds.Left, bounds.Top));
-        var size = transform.Transform(new Vector(bounds.Width, bounds.Height));
-
-        Left = topLeft.X;
-        Top = topLeft.Y;
-        Width = size.X;
-        Height = size.Y;
+        SetWindowPos(hwnd, IntPtr.Zero, bounds.Left, bounds.Top, bounds.Width, bounds.Height, SwpNoZOrder | SwpNoActivate);
 
         Activate();
         Focus();

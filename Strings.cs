@@ -20,8 +20,7 @@ public static class Strings
     public static string Format(string key, params object[] args) =>
         string.Format(CultureInfo.CurrentCulture, Get(key), args);
 
-    public static string Tray_Pause => Get(nameof(Tray_Pause));
-    public static string Tray_Resume => Get(nameof(Tray_Resume));
+    public static string Tray_Active => Get(nameof(Tray_Active));
     public static string Tray_RestNow => Get(nameof(Tray_RestNow));
     public static string Tray_Settings => Get(nameof(Tray_Settings));
     public static string Tray_Exit => Get(nameof(Tray_Exit));

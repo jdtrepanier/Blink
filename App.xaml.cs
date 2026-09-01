@@ -14,7 +14,7 @@ public partial class App : System.Windows.Application
 
     private AppSettings _settings = null!;
     private WinForms.NotifyIcon _tray = null!;
-    private WinForms.ToolStripMenuItem _pauseItem = null!;
+    private WinForms.ToolStripMenuItem _activeItem = null!;
     private WinForms.ToolStripMenuItem _restItem = null!;
     private WinForms.ToolStripMenuItem _settingsItem = null!;
     private WinForms.ToolStripMenuItem _exitItem = null!;
@@ -74,14 +74,14 @@ public partial class App : System.Windows.Application
     {
         var menu = new WinForms.ContextMenuStrip();
 
-        _pauseItem = new WinForms.ToolStripMenuItem("", null, (_, _) => TogglePause());
+        _activeItem = new WinForms.ToolStripMenuItem("", null, (_, _) => ToggleActive());
         _restItem = new WinForms.ToolStripMenuItem("", null, (_, _) => StartBreak());
         _settingsItem = new WinForms.ToolStripMenuItem("", null, (_, _) => ShowSettings());
         _exitItem = new WinForms.ToolStripMenuItem("", null, (_, _) => ExitApp());
 
-        menu.Items.Add(_pauseItem);
         menu.Items.Add(_restItem);
         menu.Items.Add(new WinForms.ToolStripSeparator());
+        menu.Items.Add(_activeItem);
         menu.Items.Add(_settingsItem);
         menu.Items.Add(new WinForms.ToolStripSeparator());
         menu.Items.Add(_exitItem);
@@ -103,7 +103,7 @@ public partial class App : System.Windows.Application
     /// <summary>(Re)applies localized text to the tray menu items and tooltip.</summary>
     private void RefreshTrayTexts()
     {
-        _pauseItem.Text = _enabled ? Strings.Tray_Pause : Strings.Tray_Resume;
+        _activeItem.Text = Strings.Tray_Active;
         _restItem.Text = Strings.Tray_RestNow;
         _settingsItem.Text = Strings.Tray_Settings;
         _exitItem.Text = Strings.Tray_Exit;
@@ -136,7 +136,7 @@ public partial class App : System.Windows.Application
     private void SetEnabled(bool enabled)
     {
         _enabled = enabled;
-        _pauseItem.Text = enabled ? Strings.Tray_Pause : Strings.Tray_Resume;
+        _activeItem.Checked = enabled;
 
         if (enabled)
         {
@@ -152,7 +152,7 @@ public partial class App : System.Windows.Application
         UpdateTooltip();
     }
 
-    private void TogglePause() => SetEnabled(!_enabled);
+    private void ToggleActive() => SetEnabled(!_enabled);
 
     private void ScheduleNextBreak()
     {
