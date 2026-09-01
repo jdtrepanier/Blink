@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Tray_Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Tray_Resume" xml:space="preserve"><value>Resume</value></data>
+  <data name="Tray_RestNow" xml:space="preserve"><value>Rest now</value></data>
+  <data name="Tray_Settings" xml:space="preserve"><value>Settings...</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>Exit</value></data>
+  <data name="Tooltip_Resting" xml:space="preserve"><value>Blink - resting your eyes</value></data>
+  <data name="Tooltip_NextBreak" xml:space="preserve"><value>Blink - next break in {0}m {1:00}s</value></data>
+  <data name="Tooltip_Paused" xml:space="preserve"><value>Blink - paused</value></data>
+  <data name="Overlay_RestYourEyes" xml:space="preserve"><value>Rest your eyes</value></data>
+  <data name="Overlay_Tip" xml:space="preserve"><value>Look at something ~20 feet away.</value></data>
+  <data name="Overlay_SkipHint" xml:space="preserve"><value>Press Esc to skip</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Blink Settings</value></data>
+  <data name="Settings_BreakEvery" xml:space="preserve"><value>Break every (minutes)</value></data>
+  <data name="Settings_BreakLength" xml:space="preserve"><value>Break length (seconds)</value></data>
+  <data name="Settings_AllowSkip" xml:space="preserve"><value>Allow skipping a break (Esc / click)</value></data>
+  <data name="Settings_StartScheduling" xml:space="preserve"><value>Start scheduling when Blink launches</value></data>
+  <data name="Settings_StartWithWindows" xml:space="preserve"><value>Start Blink automatically when I sign in to Windows</value></data>
+  <data name="Settings_Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Settings_OK" xml:space="preserve"><value>OK</value></data>
+  <data name="Settings_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Settings_Validation_Interval" xml:space="preserve"><value>Break interval must be a number between {0} and {1} minutes.</value></data>
+  <data name="Settings_Validation_Break" xml:space="preserve"><value>Break length must be a number between {0} and {1} minutes.</value></data>
+  <data name="Language_System" xml:space="preserve"><value>System default</value></data>
+  <data name="Language_English" xml:space="preserve"><value>English</value></data>
+  <data name="Language_French" xml:space="preserve"><value>Français</value></data>
+  <data name="Language_Spanish" xml:space="preserve"><value>Español</value></data>
+</root>

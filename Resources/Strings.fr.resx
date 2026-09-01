@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Tray_Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Tray_Resume" xml:space="preserve"><value>Reprendre</value></data>
+  <data name="Tray_RestNow" xml:space="preserve"><value>Faire une pause</value></data>
+  <data name="Tray_Settings" xml:space="preserve"><value>Paramètres...</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>Quitter</value></data>
+  <data name="Tooltip_Resting" xml:space="preserve"><value>Blink - repos des yeux</value></data>
+  <data name="Tooltip_NextBreak" xml:space="preserve"><value>Blink - prochaine pause dans {0} min {1:00} s</value></data>
+  <data name="Tooltip_Paused" xml:space="preserve"><value>Blink - en pause</value></data>
+  <data name="Overlay_RestYourEyes" xml:space="preserve"><value>Reposez vos yeux</value></data>
+  <data name="Overlay_Tip" xml:space="preserve"><value>Regardez au loin, à environ 6 mètres.</value></data>
+  <data name="Overlay_SkipHint" xml:space="preserve"><value>Appuyez sur Échap pour ignorer</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Paramètres de Blink</value></data>
+  <data name="Settings_BreakEvery" xml:space="preserve"><value>Pause toutes les (minutes)</value></data>
+  <data name="Settings_BreakLength" xml:space="preserve"><value>Durée de la pause (secondes)</value></data>
+  <data name="Settings_AllowSkip" xml:space="preserve"><value>Autoriser à ignorer une pause (Échap / clic)</value></data>
+  <data name="Settings_StartScheduling" xml:space="preserve"><value>Démarrer la planification au lancement de Blink</value></data>
+  <data name="Settings_StartWithWindows" xml:space="preserve"><value>Démarrer Blink automatiquement à l'ouverture de session Windows</value></data>
+  <data name="Settings_Language" xml:space="preserve"><value>Langue</value></data>
+  <data name="Settings_OK" xml:space="preserve"><value>OK</value></data>
+  <data name="Settings_Cancel" xml:space="preserve"><value>Annuler</value></data>
+  <data name="Settings_Validation_Interval" xml:space="preserve"><value>L'intervalle doit être un nombre entre {0} et {1} minutes.</value></data>
+  <data name="Settings_Validation_Break" xml:space="preserve"><value>La durée de la pause doit être un nombre entre {0} et {1} minutes.</value></data>
+  <data name="Language_System" xml:space="preserve"><value>Langue du système</value></data>
+  <data name="Language_English" xml:space="preserve"><value>English</value></data>
+  <data name="Language_French" xml:space="preserve"><value>Français</value></data>
+  <data name="Language_Spanish" xml:space="preserve"><value>Español</value></data>
+</root>
