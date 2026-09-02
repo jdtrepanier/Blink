@@ -17,6 +17,9 @@ public sealed class AppSettings
     /// <summary>Whether the user can dismiss a break early (Esc / click).</summary>
     public bool AllowSkip { get; set; } = true;
 
+    /// <summary>Minutes of inactivity (or lock) after which the break countdown resets.</summary>
+    public double IdleResetMinutes { get; set; } = 5;
+
     /// <summary>Start scheduling automatically when the app launches.</summary>
     public bool StartEnabled { get; set; } = true;
 
@@ -76,6 +79,7 @@ public sealed class AppSettings
         // Clamp to sane ranges so a bad file can't wedge the app.
         IntervalMinutes = Math.Clamp(IntervalMinutes, 1, 24 * 60);
         BreakSeconds = Math.Clamp(BreakSeconds, 5, 3600);
+        IdleResetMinutes = Math.Clamp(IdleResetMinutes, 1, 24 * 60);
         return this;
     }
 }

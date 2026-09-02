@@ -1,0 +1,19 @@
+<Window x:Class="Blink.LogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Blink - Log"
+        Width="560" Height="380"
+        Background="#1B2027"
+        Foreground="#E6EEF6"
+        FontFamily="Segoe UI"
+        FontSize="12"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="12">
+        <ListBox x:Name="LogList"
+                 Background="#0F141A"
+                 Foreground="#E6EEF6"
+                 BorderBrush="#3A434E"
+                 FontFamily="Consolas"
+                 ScrollViewer.HorizontalScrollBarVisibility="Auto" />
+    </Grid>
+</Window>

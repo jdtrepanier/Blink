@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Blink;
 
@@ -15,6 +16,7 @@ public partial class SettingsWindow : Window
         // NumericUpDown clamps to its own Minimum/Maximum, so values stay valid.
         IntervalBox.Value = settings.IntervalMinutes;
         BreakBox.Value = settings.BreakSeconds;
+        IdleResetBox.Value = settings.IdleResetMinutes;
         AllowSkipBox.IsChecked = settings.AllowSkip;
         StartEnabledBox.IsChecked = settings.StartEnabled;
 
@@ -52,6 +54,7 @@ public partial class SettingsWindow : Window
     {
         _settings.IntervalMinutes = IntervalBox.Value;
         _settings.BreakSeconds = BreakBox.Value;
+        _settings.IdleResetMinutes = IdleResetBox.Value;
         _settings.AllowSkip = AllowSkipBox.IsChecked == true;
         _settings.StartEnabled = StartEnabledBox.IsChecked == true;
         _settings.Language = (LanguageBox.SelectedItem as ComboBoxItem)?.Tag as string ?? "";
@@ -60,5 +63,12 @@ public partial class SettingsWindow : Window
 
         DialogResult = true;
         Close();
+    }
+
+    // Hidden diagnostics entry point: Ctrl+double-click anywhere in this window.
+    private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount == 2 && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+            LogWindow.ShowOrActivate();
     }
 }

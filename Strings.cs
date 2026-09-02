@@ -36,6 +36,7 @@ public static class Strings
     public static string Settings_BreakEvery => Get(nameof(Settings_BreakEvery));
     public static string Settings_BreakLength => Get(nameof(Settings_BreakLength));
     public static string Settings_AllowSkip => Get(nameof(Settings_AllowSkip));
+    public static string Settings_IdleReset => Get(nameof(Settings_IdleReset));
     public static string Settings_StartScheduling => Get(nameof(Settings_StartScheduling));
     public static string Settings_StartWithWindows => Get(nameof(Settings_StartWithWindows));
     public static string Settings_Language => Get(nameof(Settings_Language));

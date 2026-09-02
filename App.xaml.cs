@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
+using Microsoft.Win32;
 using WinForms = System.Windows.Forms;
 
 namespace Blink;
@@ -30,6 +31,13 @@ public partial class App : System.Windows.Application
 
     private bool _enabled;
     private bool _breakActive;
+
+    // Set while the session is locked, so we can pause and later resume (or reset) the countdown.
+    private DateTime? _lockedAt;
+    private TimeSpan _remainingAtLock;
+
+    // Only reset once per idle stretch; requires activity to bring the user back before it can fire again.
+    private bool _idleResetArmed = true;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -66,6 +74,8 @@ public partial class App : System.Windows.Application
 
         _breakTimer.Interval = TimeSpan.FromMilliseconds(250);
         _breakTimer.Tick += BreakTimer_Tick;
+
+        SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
 
         SetEnabled(_settings.StartEnabled);
     }
@@ -137,6 +147,7 @@ public partial class App : System.Windows.Application
     {
         _enabled = enabled;
         _activeItem.Checked = enabled;
+        Log.Write(enabled ? "Activated" : "Deactivated");
 
         if (enabled)
         {
@@ -163,8 +174,95 @@ public partial class App : System.Windows.Application
     {
         UpdateTooltip();
 
-        if (!_breakActive && DateTime.Now >= _nextBreakAt)
+        if (_breakActive)
+            return;
+
+        CheckIdleReset();
+
+        if (DateTime.Now >= _nextBreakAt)
             StartBreak();
+    }
+
+    /// <summary>Resets the countdown once the user has been idle past the configured threshold.</summary>
+    private void CheckIdleReset()
+    {
+        var idle = IdleTime.GetIdleTime();
+        var threshold = TimeSpan.FromMinutes(_settings.IdleResetMinutes);
+
+        if (idle >= threshold)
+        {
+            if (_idleResetArmed)
+            {
+                _idleResetArmed = false;
+                Log.Write($"Idle for {idle:mm\\:ss}: countdown reset");
+                ScheduleNextBreak();
+            }
+        }
+        else
+        {
+            _idleResetArmed = true;
+        }
+    }
+
+    private void SystemEvents_SessionSwitch(object? sender, SessionSwitchEventArgs e)
+    {
+        // SystemEvents raises this on its own worker thread; marshal to the UI thread
+        // before touching DispatcherTimer/UI state.
+        Dispatcher.Invoke(() =>
+        {
+            switch (e.Reason)
+            {
+                case SessionSwitchReason.SessionLock:
+                    OnSessionLocked();
+                    break;
+                case SessionSwitchReason.SessionUnlock:
+                    OnSessionUnlocked();
+                    break;
+            }
+        });
+    }
+
+    private void OnSessionLocked()
+    {
+        if (!_enabled || _breakActive || _lockedAt is not null)
+            return;
+
+        _lockedAt = DateTime.Now;
+        _remainingAtLock = _nextBreakAt - DateTime.Now;
+        if (_remainingAtLock < TimeSpan.Zero)
+            _remainingAtLock = TimeSpan.Zero;
+
+        Log.Write($"Locked: paused with {_remainingAtLock:mm\\:ss} remaining");
+        _scheduleTimer.Stop();
+    }
+
+    private void OnSessionUnlocked()
+    {
+        if (_lockedAt is null)
+            return;
+
+        var lockedDuration = DateTime.Now - _lockedAt.Value;
+        _lockedAt = null;
+
+        // Being away long enough to lock counts as the activity that re-arms idle detection.
+        _idleResetArmed = true;
+
+        if (!_enabled || _breakActive)
+            return;
+
+        // A lock long enough to count as idle resets the countdown; a brief lock just resumes it.
+        if (lockedDuration >= TimeSpan.FromMinutes(_settings.IdleResetMinutes))
+        {
+            Log.Write($"Unlocked after {lockedDuration:mm\\:ss}: countdown reset");
+            ScheduleNextBreak();
+        }
+        else
+        {
+            Log.Write($"Unlocked after {lockedDuration:mm\\:ss}: resumed with {_remainingAtLock:mm\\:ss} remaining");
+            _nextBreakAt = DateTime.Now + _remainingAtLock;
+        }
+
+        _scheduleTimer.Start();
     }
 
     private void StartBreak()
@@ -172,6 +270,7 @@ public partial class App : System.Windows.Application
         if (_breakActive)
             return;
 
+        Log.Write("Break started");
         _breakActive = true;
         _breakEndsAt = DateTime.Now.AddSeconds(_settings.BreakSeconds);
 
@@ -213,6 +312,7 @@ public partial class App : System.Windows.Application
         if (!_breakActive)
             return;
 
+        Log.Write("Break ended");
         _breakTimer.Stop();
 
         foreach (var overlay in _overlays)
@@ -291,6 +391,9 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        // SystemEvents is process-wide static state; unhook so this instance isn't kept alive.
+        SystemEvents.SessionSwitch -= SystemEvents_SessionSwitch;
+
         // Release the single-instance guard so the next launch can start.
         if (_singleInstanceMutex is not null)
         {

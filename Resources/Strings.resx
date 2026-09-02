@@ -72,6 +72,7 @@
   <data name="Settings_BreakEvery" xml:space="preserve"><value>Break every (minutes)</value></data>
   <data name="Settings_BreakLength" xml:space="preserve"><value>Break length (seconds)</value></data>
   <data name="Settings_AllowSkip" xml:space="preserve"><value>Allow skipping a break (Esc / click)</value></data>
+  <data name="Settings_IdleReset" xml:space="preserve"><value>Reset timer after idle for (minutes)</value></data>
   <data name="Settings_StartScheduling" xml:space="preserve"><value>Start scheduling when Blink launches</value></data>
   <data name="Settings_StartWithWindows" xml:space="preserve"><value>Start Blink automatically when I sign in to Windows</value></data>
   <data name="Settings_Language" xml:space="preserve"><value>Language</value></data>

@@ -26,6 +26,7 @@
   <data name="Settings_BreakEvery" xml:space="preserve"><value>Pausa cada (minutos)</value></data>
   <data name="Settings_BreakLength" xml:space="preserve"><value>Duración de la pausa (segundos)</value></data>
   <data name="Settings_AllowSkip" xml:space="preserve"><value>Permitir omitir una pausa (Esc / clic)</value></data>
+  <data name="Settings_IdleReset" xml:space="preserve"><value>Reiniciar tras inactividad de (minutos)</value></data>
   <data name="Settings_StartScheduling" xml:space="preserve"><value>Iniciar la programación al abrir Blink</value></data>
   <data name="Settings_StartWithWindows" xml:space="preserve"><value>Iniciar Blink automáticamente al iniciar sesión en Windows</value></data>
   <data name="Settings_Language" xml:space="preserve"><value>Idioma</value></data>
