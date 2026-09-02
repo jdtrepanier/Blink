@@ -10,7 +10,8 @@
         Background="#1B2027"
         Foreground="#E6EEF6"
         FontFamily="Segoe UI"
-        FontSize="14">
+        FontSize="14"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown">
     <Window.Resources>
         <!-- Dark-themed ComboBox to match the settings dialog palette. -->
         <SolidColorBrush x:Key="ComboBackground" Color="#0F141A" />
@@ -138,6 +139,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static l:Strings.Settings_BreakEvery}"
@@ -152,24 +154,30 @@
                          Minimum="5" Maximum="3600" Increment="5" DecimalPlaces="0"
                          Margin="0,0,0,12" />
 
-        <TextBlock Grid.Row="2" Grid.Column="0" Text="{x:Static l:Strings.Settings_Language}"
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="{x:Static l:Strings.Settings_IdleReset}"
+                   VerticalAlignment="Center" Margin="0,0,16,12" />
+        <l:NumericUpDown x:Name="IdleResetBox" Grid.Row="2" Grid.Column="1" Height="28"
+                         Minimum="1" Maximum="1440" Increment="1" DecimalPlaces="0"
+                         Margin="0,0,0,12" />
+
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="{x:Static l:Strings.Settings_Language}"
                    VerticalAlignment="Center" Margin="0,0,16,16" />
-        <ComboBox x:Name="LanguageBox" Grid.Row="2" Grid.Column="1" Height="28"
+        <ComboBox x:Name="LanguageBox" Grid.Row="3" Grid.Column="1" Height="28"
                   VerticalContentAlignment="Center" Margin="0,0,0,16" />
 
-        <CheckBox x:Name="AllowSkipBox" Grid.Row="3" Grid.ColumnSpan="2"
+        <CheckBox x:Name="AllowSkipBox" Grid.Row="4" Grid.ColumnSpan="2"
                   Content="{x:Static l:Strings.Settings_AllowSkip}"
                   Foreground="#E6EEF6" Margin="0,4,0,4" />
 
-        <CheckBox x:Name="StartEnabledBox" Grid.Row="4" Grid.ColumnSpan="2"
+        <CheckBox x:Name="StartEnabledBox" Grid.Row="5" Grid.ColumnSpan="2"
                   Content="{x:Static l:Strings.Settings_StartScheduling}"
                   Foreground="#E6EEF6" Margin="0,4,0,4" />
 
-        <CheckBox x:Name="StartWithWindowsBox" Grid.Row="5" Grid.ColumnSpan="2"
+        <CheckBox x:Name="StartWithWindowsBox" Grid.Row="6" Grid.ColumnSpan="2"
                   Content="{x:Static l:Strings.Settings_StartWithWindows}"
                   Foreground="#E6EEF6" Margin="0,4,0,16" />
 
-        <StackPanel Grid.Row="6" Grid.ColumnSpan="2" Orientation="Horizontal"
+        <StackPanel Grid.Row="7" Grid.ColumnSpan="2" Orientation="Horizontal"
                     HorizontalAlignment="Right">
             <Button x:Name="OkButton" Content="{x:Static l:Strings.Settings_OK}" Width="88" Height="30"
                     Margin="0,0,8,0" IsDefault="True" Click="Ok_Click" />
