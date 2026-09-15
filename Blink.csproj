@@ -21,4 +21,12 @@
     <Resource Include="app.ico" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Blink.Tests lives under this project's folder; without this, its default **/*.cs glob
+         (and the WPF temp project generated from it) would also compile the test sources. -->
+    <Compile Remove="Blink.Tests\**" />
+    <EmbeddedResource Remove="Blink.Tests\**" />
+    <None Remove="Blink.Tests\**" />
+  </ItemGroup>
+
 </Project>
