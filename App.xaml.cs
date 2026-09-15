@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Win32;
@@ -22,22 +21,12 @@ public partial class App : System.Windows.Application
 
     // Counts down to the next break.
     private readonly DispatcherTimer _scheduleTimer = new();
-    private DateTime _nextBreakAt;
+    private readonly BreakScheduler _scheduler = new();
 
     // Drives the countdown while a break is on screen.
     private readonly DispatcherTimer _breakTimer = new();
     private DateTime _breakEndsAt;
     private readonly List<OverlayWindow> _overlays = new();
-
-    private bool _enabled;
-    private bool _breakActive;
-
-    // Set while the session is locked, so we can pause and later resume (or reset) the countdown.
-    private DateTime? _lockedAt;
-    private TimeSpan _remainingAtLock;
-
-    // Only reset once per idle stretch; requires activity to bring the user back before it can fire again.
-    private bool _idleResetArmed = true;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -66,6 +55,7 @@ public partial class App : System.Windows.Application
 
         _settings = AppSettings.Load();
         ApplyCulture(_settings.Language);
+        ApplySchedulerSettings();
 
         BuildTray();
 
@@ -76,6 +66,7 @@ public partial class App : System.Windows.Application
         _breakTimer.Tick += BreakTimer_Tick;
 
         SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
+        SystemEvents.PowerModeChanged += SystemEvents_PowerModeChanged;
 
         SetEnabled(_settings.StartEnabled);
     }
@@ -145,17 +136,17 @@ public partial class App : System.Windows.Application
 
     private void SetEnabled(bool enabled)
     {
-        _enabled = enabled;
         _activeItem.Checked = enabled;
         Log.Write(enabled ? "Activated" : "Deactivated");
 
         if (enabled)
         {
-            ScheduleNextBreak();
+            _scheduler.Enable(DateTime.Now);
             _scheduleTimer.Start();
         }
         else
         {
+            _scheduler.Disable();
             _scheduleTimer.Stop();
         }
 
@@ -163,45 +154,26 @@ public partial class App : System.Windows.Application
         UpdateTooltip();
     }
 
-    private void ToggleActive() => SetEnabled(!_enabled);
+    private void ToggleActive() => SetEnabled(!_scheduler.Enabled);
 
-    private void ScheduleNextBreak()
+    /// <summary>Applies the interval/idle-reset settings to the scheduler.</summary>
+    private void ApplySchedulerSettings()
     {
-        _nextBreakAt = DateTime.Now.AddMinutes(_settings.IntervalMinutes);
+        _scheduler.Interval = TimeSpan.FromMinutes(_settings.IntervalMinutes);
+        _scheduler.IdleResetThreshold = TimeSpan.FromMinutes(_settings.IdleResetMinutes);
     }
 
     private void ScheduleTimer_Tick(object? sender, EventArgs e)
     {
         UpdateTooltip();
 
-        if (_breakActive)
-            return;
+        var result = _scheduler.Tick(DateTime.Now, IdleTime.GetIdleTime());
 
-        CheckIdleReset();
+        if (result.IdleResetTriggered)
+            Log.Write($"Idle for {result.IdleDuration:mm\\:ss}: countdown reset");
 
-        if (DateTime.Now >= _nextBreakAt)
+        if (result.ShouldStartBreak)
             StartBreak();
-    }
-
-    /// <summary>Resets the countdown once the user has been idle past the configured threshold.</summary>
-    private void CheckIdleReset()
-    {
-        var idle = IdleTime.GetIdleTime();
-        var threshold = TimeSpan.FromMinutes(_settings.IdleResetMinutes);
-
-        if (idle >= threshold)
-        {
-            if (_idleResetArmed)
-            {
-                _idleResetArmed = false;
-                Log.Write($"Idle for {idle:mm\\:ss}: countdown reset");
-                ScheduleNextBreak();
-            }
-        }
-        else
-        {
-            _idleResetArmed = true;
-        }
     }
 
     private void SystemEvents_SessionSwitch(object? sender, SessionSwitchEventArgs e)
@@ -222,44 +194,50 @@ public partial class App : System.Windows.Application
         });
     }
 
+    private void SystemEvents_PowerModeChanged(object? sender, PowerModeChangedEventArgs e)
+    {
+        // Sleep/hibernate doesn't always raise SessionLock first, so the countdown must be
+        // paused here too - otherwise the wall-clock target is missed during suspend and a
+        // break fires the instant the machine wakes. OnSessionLocked/Unlocked already guard
+        // against being called twice (e.g. once for the real lock, once for suspend).
+        Dispatcher.Invoke(() =>
+        {
+            switch (e.Mode)
+            {
+                case PowerModes.Suspend:
+                    OnSessionLocked();
+                    break;
+                case PowerModes.Resume:
+                    OnSessionUnlocked();
+                    break;
+            }
+        });
+    }
+
     private void OnSessionLocked()
     {
-        if (!_enabled || _breakActive || _lockedAt is not null)
+        var result = _scheduler.Lock(DateTime.Now);
+        if (!result.Locked)
             return;
 
-        _lockedAt = DateTime.Now;
-        _remainingAtLock = _nextBreakAt - DateTime.Now;
-        if (_remainingAtLock < TimeSpan.Zero)
-            _remainingAtLock = TimeSpan.Zero;
-
-        Log.Write($"Locked: paused with {_remainingAtLock:mm\\:ss} remaining");
+        Log.Write($"Locked: paused with {result.Remaining:mm\\:ss} remaining");
         _scheduleTimer.Stop();
     }
 
     private void OnSessionUnlocked()
     {
-        if (_lockedAt is null)
-            return;
+        var result = _scheduler.Unlock(DateTime.Now);
 
-        var lockedDuration = DateTime.Now - _lockedAt.Value;
-        _lockedAt = null;
-
-        // Being away long enough to lock counts as the activity that re-arms idle detection.
-        _idleResetArmed = true;
-
-        if (!_enabled || _breakActive)
-            return;
-
-        // A lock long enough to count as idle resets the countdown; a brief lock just resumes it.
-        if (lockedDuration >= TimeSpan.FromMinutes(_settings.IdleResetMinutes))
+        switch (result.Action)
         {
-            Log.Write($"Unlocked after {lockedDuration:mm\\:ss}: countdown reset");
-            ScheduleNextBreak();
-        }
-        else
-        {
-            Log.Write($"Unlocked after {lockedDuration:mm\\:ss}: resumed with {_remainingAtLock:mm\\:ss} remaining");
-            _nextBreakAt = DateTime.Now + _remainingAtLock;
+            case BreakScheduler.UnlockAction.Ignored:
+                return;
+            case BreakScheduler.UnlockAction.Reset:
+                Log.Write($"Unlocked after {result.LockedDuration:mm\\:ss}: countdown reset");
+                break;
+            case BreakScheduler.UnlockAction.Resumed:
+                Log.Write($"Unlocked after {result.LockedDuration:mm\\:ss}: resumed with {result.Remaining:mm\\:ss} remaining");
+                break;
         }
 
         _scheduleTimer.Start();
@@ -267,11 +245,11 @@ public partial class App : System.Windows.Application
 
     private void StartBreak()
     {
-        if (_breakActive)
+        if (_scheduler.BreakActive)
             return;
 
         Log.Write("Break started");
-        _breakActive = true;
+        _scheduler.BreakStarted();
         _breakEndsAt = DateTime.Now.AddSeconds(_settings.BreakSeconds);
 
         foreach (var screen in WinForms.Screen.AllScreens)
@@ -309,7 +287,7 @@ public partial class App : System.Windows.Application
 
     private void EndBreak()
     {
-        if (!_breakActive)
+        if (!_scheduler.BreakActive)
             return;
 
         Log.Write("Break ended");
@@ -319,10 +297,7 @@ public partial class App : System.Windows.Application
             overlay.Close();
         _overlays.Clear();
 
-        _breakActive = false;
-
-        if (_enabled)
-            ScheduleNextBreak();
+        _scheduler.BreakEnded(DateTime.Now);
 
         UpdateTooltip();
     }
@@ -335,10 +310,11 @@ public partial class App : System.Windows.Application
         if (dialog.ShowDialog() == true)
         {
             _settings.Save();
+            ApplySchedulerSettings();
 
             // Re-arm the schedule with the new interval (StartEnabled only affects launch).
-            if (_enabled && !_breakActive)
-                ScheduleNextBreak();
+            if (_scheduler.Enabled && !_scheduler.BreakActive)
+                _scheduler.ScheduleNextBreak(DateTime.Now);
 
             if (_settings.Language != previousLanguage)
                 ApplyCulture(_settings.Language);
@@ -352,22 +328,20 @@ public partial class App : System.Windows.Application
     private void UpdateTrayIcon()
     {
         var old = _tray.Icon;
-        _tray.Icon = IconFactory.CreateSleepyEye(paused: !_enabled);
+        _tray.Icon = IconFactory.CreateSleepyEye(paused: !_scheduler.Enabled);
         old?.Dispose();
     }
 
     private void UpdateTooltip()
     {
         string text;
-        if (_breakActive)
+        if (_scheduler.BreakActive)
         {
             text = Strings.Tooltip_Resting;
         }
-        else if (_enabled)
+        else if (_scheduler.Enabled)
         {
-            var remaining = _nextBreakAt - DateTime.Now;
-            if (remaining < TimeSpan.Zero)
-                remaining = TimeSpan.Zero;
+            var remaining = _scheduler.TimeUntilNextBreak(DateTime.Now);
             text = Strings.Tooltip_NextBreak((int)remaining.TotalMinutes, remaining.Seconds);
         }
         else
@@ -393,6 +367,7 @@ public partial class App : System.Windows.Application
     {
         // SystemEvents is process-wide static state; unhook so this instance isn't kept alive.
         SystemEvents.SessionSwitch -= SystemEvents_SessionSwitch;
+        SystemEvents.PowerModeChanged -= SystemEvents_PowerModeChanged;
 
         // Release the single-instance guard so the next launch can start.
         if (_singleInstanceMutex is not null)
