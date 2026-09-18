@@ -176,4 +176,60 @@ public class BreakSchedulerTests
         Assert.False(scheduler.BreakActive);
         Assert.False(scheduler.Enabled);
     }
+
+    [Fact]
+    public void Tick_OneMinuteBeforeBreak_ShowsWarningOnce()
+    {
+        var scheduler = CreateEnabled(TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(5));
+
+        var first = scheduler.Tick(Start + TimeSpan.FromMinutes(29), TimeSpan.Zero);
+        Assert.True(first.ShouldShowWarning);
+
+        // Still within the warning window a moment later: must not fire again.
+        var second = scheduler.Tick(Start + TimeSpan.FromMinutes(29) + TimeSpan.FromSeconds(1), TimeSpan.Zero);
+        Assert.False(second.ShouldShowWarning);
+    }
+
+    [Fact]
+    public void Tick_MoreThanOneMinuteBeforeBreak_DoesNotShowWarning()
+    {
+        var scheduler = CreateEnabled(TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(5));
+
+        var result = scheduler.Tick(Start + TimeSpan.FromMinutes(28), TimeSpan.Zero);
+
+        Assert.False(result.ShouldShowWarning);
+    }
+
+    [Fact]
+    public void Tick_AfterWarningAndReschedule_ShowsWarningAgainNextCycle()
+    {
+        var scheduler = CreateEnabled(TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(5));
+        scheduler.Tick(Start + TimeSpan.FromMinutes(29), TimeSpan.Zero); // warning fires
+
+        scheduler.Tick(Start + TimeSpan.FromMinutes(30), TimeSpan.Zero); // break starts
+        scheduler.BreakStarted();
+        var breakEnd = Start + TimeSpan.FromMinutes(30) + TimeSpan.FromSeconds(45);
+        scheduler.BreakEnded(breakEnd); // reschedules for +30 minutes from here
+
+        var result = scheduler.Tick(breakEnd + TimeSpan.FromMinutes(29), TimeSpan.Zero);
+
+        Assert.True(result.ShouldShowWarning);
+    }
+
+    [Fact]
+    public void Tick_IdleResetPushesBreakOut_ReArmsWarning()
+    {
+        var scheduler = CreateEnabled(TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(5));
+        scheduler.Tick(Start + TimeSpan.FromMinutes(29), TimeSpan.Zero); // warning fires
+
+        // Idle long enough at 29:30 to reset the countdown before the break fires.
+        var idleTick = scheduler.Tick(Start + TimeSpan.FromMinutes(29) + TimeSpan.FromSeconds(30), TimeSpan.FromMinutes(5));
+        Assert.True(idleTick.IdleResetTriggered);
+        Assert.False(idleTick.ShouldShowWarning);
+
+        var now = Start + TimeSpan.FromMinutes(29) + TimeSpan.FromSeconds(30);
+        var result = scheduler.Tick(now + TimeSpan.FromMinutes(29), TimeSpan.Zero);
+
+        Assert.True(result.ShouldShowWarning);
+    }
 }

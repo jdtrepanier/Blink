@@ -32,6 +32,9 @@ public static class Strings
     public static string Overlay_Tip => Get(nameof(Overlay_Tip));
     public static string Overlay_SkipHint => Get(nameof(Overlay_SkipHint));
 
+    public static string Balloon_BreakSoonTitle => Get(nameof(Balloon_BreakSoonTitle));
+    public static string Balloon_BreakSoonMessage => Get(nameof(Balloon_BreakSoonMessage));
+
     public static string Settings_Title => Get(nameof(Settings_Title));
     public static string Settings_BreakEvery => Get(nameof(Settings_BreakEvery));
     public static string Settings_BreakLength => Get(nameof(Settings_BreakLength));
@@ -39,6 +42,7 @@ public static class Strings
     public static string Settings_IdleReset => Get(nameof(Settings_IdleReset));
     public static string Settings_StartScheduling => Get(nameof(Settings_StartScheduling));
     public static string Settings_StartWithWindows => Get(nameof(Settings_StartWithWindows));
+    public static string Settings_WarnBeforeBreak => Get(nameof(Settings_WarnBeforeBreak));
     public static string Settings_Language => Get(nameof(Settings_Language));
     public static string Settings_OK => Get(nameof(Settings_OK));
     public static string Settings_Cancel => Get(nameof(Settings_Cancel));

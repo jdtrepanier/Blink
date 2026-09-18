@@ -23,6 +23,9 @@ public sealed class AppSettings
     /// <summary>Start scheduling automatically when the app launches.</summary>
     public bool StartEnabled { get; set; } = true;
 
+    /// <summary>Show a tray balloon notification 1 minute before a rest break starts.</summary>
+    public bool WarnBeforeBreak { get; set; } = true;
+
     /// <summary>
     /// UI language as a culture code ("en", "fr", "es"); empty means follow the OS.
     /// </summary>

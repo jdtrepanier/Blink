@@ -11,7 +11,7 @@
         Foreground="#E6EEF6"
         FontFamily="Segoe UI"
         FontSize="14"
-        MouseLeftButtonDown="Window_MouseLeftButtonDown">
+        MouseLeftButtonDown="OnWindowMouseLeftButtonDown">
     <Window.Resources>
         <!-- Dark-themed ComboBox to match the settings dialog palette. -->
         <SolidColorBrush x:Key="ComboBackground" Color="#0F141A" />
@@ -140,6 +140,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0" Grid.Column="0" Text="{x:Static l:Strings.Settings_BreakEvery}"
@@ -169,18 +170,22 @@
                   Content="{x:Static l:Strings.Settings_AllowSkip}"
                   Foreground="#E6EEF6" Margin="0,4,0,4" />
 
-        <CheckBox x:Name="StartEnabledBox" Grid.Row="5" Grid.ColumnSpan="2"
+        <CheckBox x:Name="WarnBeforeBreakBox" Grid.Row="5" Grid.ColumnSpan="2"
+                  Content="{x:Static l:Strings.Settings_WarnBeforeBreak}"
+                  Foreground="#E6EEF6" Margin="0,4,0,4" />
+
+        <CheckBox x:Name="StartEnabledBox" Grid.Row="6" Grid.ColumnSpan="2"
                   Content="{x:Static l:Strings.Settings_StartScheduling}"
                   Foreground="#E6EEF6" Margin="0,4,0,4" />
 
-        <CheckBox x:Name="StartWithWindowsBox" Grid.Row="6" Grid.ColumnSpan="2"
+        <CheckBox x:Name="StartWithWindowsBox" Grid.Row="7" Grid.ColumnSpan="2"
                   Content="{x:Static l:Strings.Settings_StartWithWindows}"
                   Foreground="#E6EEF6" Margin="0,4,0,16" />
 
-        <StackPanel Grid.Row="7" Grid.ColumnSpan="2" Orientation="Horizontal"
+        <StackPanel Grid.Row="8" Grid.ColumnSpan="2" Orientation="Horizontal"
                     HorizontalAlignment="Right">
             <Button x:Name="OkButton" Content="{x:Static l:Strings.Settings_OK}" Width="88" Height="30"
-                    Margin="0,0,8,0" IsDefault="True" Click="Ok_Click" />
+                    Margin="0,0,8,0" IsDefault="True" Click="OnOkClick" />
             <Button Content="{x:Static l:Strings.Settings_Cancel}" Width="88" Height="30"
                     IsCancel="True" />
         </StackPanel>
