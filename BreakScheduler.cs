@@ -10,6 +10,9 @@ public sealed class BreakScheduler
     public TimeSpan Interval { get; set; }
     public TimeSpan IdleResetThreshold { get; set; }
 
+    /// <summary>How long before a break to raise the warning notification.</summary>
+    public TimeSpan WarningLeadTime { get; set; } = TimeSpan.FromMinutes(1);
+
     public bool Enabled { get; private set; }
     public bool BreakActive { get; private set; }
     public DateTime NextBreakAt { get; private set; }
@@ -20,6 +23,9 @@ public sealed class BreakScheduler
     // Only reset once per idle stretch; requires activity to bring the user back before it can fire again.
     private bool _idleResetArmed = true;
 
+    // Only fire once per countdown; re-armed whenever the next break is (re)scheduled.
+    private bool _warningArmed = true;
+
     public void Enable(DateTime now)
     {
         Enabled = true;
@@ -28,7 +34,11 @@ public sealed class BreakScheduler
 
     public void Disable() => Enabled = false;
 
-    public void ScheduleNextBreak(DateTime now) => NextBreakAt = now + Interval;
+    public void ScheduleNextBreak(DateTime now)
+    {
+        NextBreakAt = now + Interval;
+        _warningArmed = true;
+    }
 
     public TimeSpan TimeUntilNextBreak(DateTime now)
     {
@@ -36,13 +46,13 @@ public sealed class BreakScheduler
         return remaining < TimeSpan.Zero ? TimeSpan.Zero : remaining;
     }
 
-    public readonly record struct TickResult(bool ShouldStartBreak, bool IdleResetTriggered, TimeSpan IdleDuration);
+    public readonly record struct TickResult(bool ShouldStartBreak, bool IdleResetTriggered, TimeSpan IdleDuration, bool ShouldShowWarning);
 
     /// <summary>Call once per schedule tick. <paramref name="idle"/> is how long since the last user input.</summary>
     public TickResult Tick(DateTime now, TimeSpan idle)
     {
         if (!Enabled || BreakActive)
-            return new TickResult(false, false, idle);
+            return new TickResult(false, false, idle, false);
 
         var idleReset = false;
         if (idle >= IdleResetThreshold)
@@ -59,7 +69,15 @@ public sealed class BreakScheduler
             _idleResetArmed = true;
         }
 
-        return new TickResult(now >= NextBreakAt, idleReset, idle);
+        var shouldShowWarning = false;
+        var remaining = TimeUntilNextBreak(now);
+        if (_warningArmed && remaining <= WarningLeadTime && remaining > TimeSpan.Zero)
+        {
+            _warningArmed = false;
+            shouldShowWarning = true;
+        }
+
+        return new TickResult(now >= NextBreakAt, idleReset, idle, shouldShowWarning);
     }
 
     public readonly record struct LockResult(bool Locked, TimeSpan Remaining);

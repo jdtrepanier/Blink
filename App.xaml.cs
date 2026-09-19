@@ -60,13 +60,13 @@ public partial class App : System.Windows.Application
         BuildTray();
 
         _scheduleTimer.Interval = TimeSpan.FromSeconds(1);
-        _scheduleTimer.Tick += ScheduleTimer_Tick;
+        _scheduleTimer.Tick += OnScheduleTimerTick;
 
         _breakTimer.Interval = TimeSpan.FromMilliseconds(250);
-        _breakTimer.Tick += BreakTimer_Tick;
+        _breakTimer.Tick += OnBreakTimerTick;
 
-        SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
-        SystemEvents.PowerModeChanged += SystemEvents_PowerModeChanged;
+        SystemEvents.SessionSwitch += OnSystemEventsSessionSwitch;
+        SystemEvents.PowerModeChanged += OnSystemEventsPowerModeChanged;
 
         SetEnabled(_settings.StartEnabled);
     }
@@ -163,7 +163,7 @@ public partial class App : System.Windows.Application
         _scheduler.IdleResetThreshold = TimeSpan.FromMinutes(_settings.IdleResetMinutes);
     }
 
-    private void ScheduleTimer_Tick(object? sender, EventArgs e)
+    private void OnScheduleTimerTick(object? sender, EventArgs e)
     {
         UpdateTooltip();
 
@@ -172,11 +172,14 @@ public partial class App : System.Windows.Application
         if (result.IdleResetTriggered)
             Log.Write($"Idle for {result.IdleDuration:mm\\:ss}: countdown reset");
 
+        if (result.ShouldShowWarning && _settings.WarnBeforeBreak)
+            ShowBreakWarning();
+
         if (result.ShouldStartBreak)
             StartBreak();
     }
 
-    private void SystemEvents_SessionSwitch(object? sender, SessionSwitchEventArgs e)
+    private void OnSystemEventsSessionSwitch(object? sender, SessionSwitchEventArgs e)
     {
         // SystemEvents raises this on its own worker thread; marshal to the UI thread
         // before touching DispatcherTimer/UI state.
@@ -194,7 +197,7 @@ public partial class App : System.Windows.Application
         });
     }
 
-    private void SystemEvents_PowerModeChanged(object? sender, PowerModeChangedEventArgs e)
+    private void OnSystemEventsPowerModeChanged(object? sender, PowerModeChangedEventArgs e)
     {
         // Sleep/hibernate doesn't always raise SessionLock first, so the countdown must be
         // paused here too - otherwise the wall-clock target is missed during suspend and a
@@ -243,6 +246,12 @@ public partial class App : System.Windows.Application
         _scheduleTimer.Start();
     }
 
+    private void ShowBreakWarning()
+    {
+        Log.Write("Break warning shown");
+        _tray.ShowBalloonTip(10000, Strings.Balloon_BreakSoonTitle, Strings.Balloon_BreakSoonMessage, WinForms.ToolTipIcon.Info);
+    }
+
     private void StartBreak()
     {
         if (_scheduler.BreakActive)
@@ -264,7 +273,7 @@ public partial class App : System.Windows.Application
         _breakTimer.Start();
     }
 
-    private void BreakTimer_Tick(object? sender, EventArgs e)
+    private void OnBreakTimerTick(object? sender, EventArgs e)
     {
         if (DateTime.Now >= _breakEndsAt)
         {
@@ -366,8 +375,8 @@ public partial class App : System.Windows.Application
     protected override void OnExit(ExitEventArgs e)
     {
         // SystemEvents is process-wide static state; unhook so this instance isn't kept alive.
-        SystemEvents.SessionSwitch -= SystemEvents_SessionSwitch;
-        SystemEvents.PowerModeChanged -= SystemEvents_PowerModeChanged;
+        SystemEvents.SessionSwitch -= OnSystemEventsSessionSwitch;
+        SystemEvents.PowerModeChanged -= OnSystemEventsPowerModeChanged;
 
         // Release the single-instance guard so the next launch can start.
         if (_singleInstanceMutex is not null)

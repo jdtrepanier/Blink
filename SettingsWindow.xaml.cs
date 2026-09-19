@@ -18,6 +18,7 @@ public partial class SettingsWindow : Window
         BreakBox.Value = settings.BreakSeconds;
         IdleResetBox.Value = settings.IdleResetMinutes;
         AllowSkipBox.IsChecked = settings.AllowSkip;
+        WarnBeforeBreakBox.IsChecked = settings.WarnBeforeBreak;
         StartEnabledBox.IsChecked = settings.StartEnabled;
 
         // The registry Run key is the source of truth for auto-start.
@@ -50,12 +51,13 @@ public partial class SettingsWindow : Window
     private void AddLanguage(string label, string code)
         => LanguageBox.Items.Add(new ComboBoxItem { Content = label, Tag = code });
 
-    private void Ok_Click(object sender, RoutedEventArgs e)
+    private void OnOkClick(object sender, RoutedEventArgs e)
     {
         _settings.IntervalMinutes = IntervalBox.Value;
         _settings.BreakSeconds = BreakBox.Value;
         _settings.IdleResetMinutes = IdleResetBox.Value;
         _settings.AllowSkip = AllowSkipBox.IsChecked == true;
+        _settings.WarnBeforeBreak = WarnBeforeBreakBox.IsChecked == true;
         _settings.StartEnabled = StartEnabledBox.IsChecked == true;
         _settings.Language = (LanguageBox.SelectedItem as ComboBoxItem)?.Tag as string ?? "";
 
@@ -66,7 +68,7 @@ public partial class SettingsWindow : Window
     }
 
     // Hidden diagnostics entry point: Ctrl+double-click anywhere in this window.
-    private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void OnWindowMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ClickCount == 2 && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
             LogWindow.ShowOrActivate();

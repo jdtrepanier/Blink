@@ -15,10 +15,10 @@ public partial class LogWindow : Window
             LogList.Items.Add(entry);
         ScrollToEnd();
 
-        Log.EntryAdded += Log_EntryAdded;
+        Log.EntryAdded += OnLogEntryAdded;
         Closed += (_, _) =>
         {
-            Log.EntryAdded -= Log_EntryAdded;
+            Log.EntryAdded -= OnLogEntryAdded;
             _instance = null;
         };
     }
@@ -37,7 +37,7 @@ public partial class LogWindow : Window
         }
     }
 
-    private void Log_EntryAdded(object? sender, string entry)
+    private void OnLogEntryAdded(object? sender, string entry)
     {
         LogList.Items.Add(entry);
         ScrollToEnd();
