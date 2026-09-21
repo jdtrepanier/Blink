@@ -15,6 +15,7 @@ public partial class App : System.Windows.Application
     private AppSettings _settings = null!;
     private WinForms.NotifyIcon _tray = null!;
     private WinForms.ToolStripMenuItem _activeItem = null!;
+    private WinForms.ToolStripMenuItem _skipNextItem = null!;
     private WinForms.ToolStripMenuItem _restItem = null!;
     private WinForms.ToolStripMenuItem _settingsItem = null!;
     private WinForms.ToolStripMenuItem _exitItem = null!;
@@ -76,6 +77,7 @@ public partial class App : System.Windows.Application
         var menu = new WinForms.ContextMenuStrip();
 
         _activeItem = new WinForms.ToolStripMenuItem("", null, (_, _) => ToggleActive());
+        _skipNextItem = new WinForms.ToolStripMenuItem("", null, (_, _) => SkipNextBreak());
         _restItem = new WinForms.ToolStripMenuItem("", null, (_, _) => StartBreak());
         _settingsItem = new WinForms.ToolStripMenuItem("", null, (_, _) => ShowSettings());
         _exitItem = new WinForms.ToolStripMenuItem("", null, (_, _) => ExitApp());
@@ -83,9 +85,13 @@ public partial class App : System.Windows.Application
         menu.Items.Add(_restItem);
         menu.Items.Add(new WinForms.ToolStripSeparator());
         menu.Items.Add(_activeItem);
+        menu.Items.Add(_skipNextItem);
         menu.Items.Add(_settingsItem);
         menu.Items.Add(new WinForms.ToolStripSeparator());
         menu.Items.Add(_exitItem);
+
+        // Skipping only makes sense while the countdown is actually running.
+        menu.Opening += (_, _) => _skipNextItem.Enabled = _scheduler.Enabled && !_scheduler.BreakActive;
 
         _tray = new WinForms.NotifyIcon
         {
@@ -105,6 +111,7 @@ public partial class App : System.Windows.Application
     private void RefreshTrayTexts()
     {
         _activeItem.Text = Strings.Tray_Active;
+        _skipNextItem.Text = Strings.Tray_SkipNext;
         _restItem.Text = Strings.Tray_RestNow;
         _settingsItem.Text = Strings.Tray_Settings;
         _exitItem.Text = Strings.Tray_Exit;
@@ -155,6 +162,17 @@ public partial class App : System.Windows.Application
     }
 
     private void ToggleActive() => SetEnabled(!_scheduler.Enabled);
+
+    /// <summary>Pushes the next break back by a full interval, leaving the schedule otherwise untouched.</summary>
+    private void SkipNextBreak()
+    {
+        if (!_scheduler.Enabled || _scheduler.BreakActive)
+            return;
+
+        _scheduler.ScheduleNextBreak(DateTime.Now);
+        Log.Write("Next break skipped");
+        UpdateTooltip();
+    }
 
     /// <summary>Applies the interval/idle-reset settings to the scheduler.</summary>
     private void ApplySchedulerSettings()
