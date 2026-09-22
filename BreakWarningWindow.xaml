@@ -14,7 +14,8 @@
         WindowStartupLocation="Manual"
         Background="Transparent"
         FontFamily="Segoe UI">
-    <Border Background="#F0101418" BorderBrush="#3A434E" BorderThickness="1" CornerRadius="10">
+    <Border Background="#F0101418" BorderBrush="#3A434E" BorderThickness="1" CornerRadius="10"
+            MouseLeftButtonDown="OnBackgroundClick">
         <Grid Margin="18,14,18,14">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />

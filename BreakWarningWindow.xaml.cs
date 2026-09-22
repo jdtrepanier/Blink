@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Input;
 
 namespace Blink;
 
@@ -33,4 +34,8 @@ public partial class BreakWarningWindow : Window
     }
 
     private void OnSkipClick(object sender, RoutedEventArgs e) => SkipRequested?.Invoke(this, EventArgs.Empty);
+
+    // The Skip button marks its own MouseLeftButtonDown as handled, so this only fires for
+    // clicks elsewhere on the popup - a plain dismiss, leaving the break schedule untouched.
+    private void OnBackgroundClick(object sender, MouseButtonEventArgs e) => Close();
 }

@@ -277,15 +277,14 @@ public partial class App : System.Windows.Application
 
         var warning = new BreakWarningWindow(_settings.AllowSkip);
         warning.SkipRequested += (_, _) => SkipNextBreak();
+        warning.Closed += (_, _) => _warningWindow = null;
         _warningWindow = warning;
         warning.Show();
     }
 
-    private void CloseWarningWindow()
-    {
-        _warningWindow?.Close();
-        _warningWindow = null;
-    }
+    // The window can also close itself (background click dismisses it), so this only ever
+    // needs to ask it to close; its own Closed handler clears _warningWindow either way.
+    private void CloseWarningWindow() => _warningWindow?.Close();
 
     private void StartBreak()
     {
