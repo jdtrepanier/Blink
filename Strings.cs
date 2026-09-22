@@ -35,6 +35,7 @@ public static class Strings
 
     public static string Balloon_BreakSoonTitle => Get(nameof(Balloon_BreakSoonTitle));
     public static string Balloon_BreakSoonMessage => Get(nameof(Balloon_BreakSoonMessage));
+    public static string BreakWarning_SkipButton => Get(nameof(BreakWarning_SkipButton));
 
     public static string Settings_Title => Get(nameof(Settings_Title));
     public static string Settings_BreakEvery => Get(nameof(Settings_BreakEvery));

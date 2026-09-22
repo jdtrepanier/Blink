@@ -25,6 +25,7 @@
   <data name="Overlay_SkipHint" xml:space="preserve"><value>Pulsa Esc para omitir</value></data>
   <data name="Balloon_BreakSoonTitle" xml:space="preserve"><value>Blink</value></data>
   <data name="Balloon_BreakSoonMessage" xml:space="preserve"><value>La pausa comienza en 1 minuto</value></data>
+  <data name="BreakWarning_SkipButton" xml:space="preserve"><value>Omitir</value></data>
   <data name="Settings_Title" xml:space="preserve"><value>Configuración de Blink</value></data>
   <data name="Settings_BreakEvery" xml:space="preserve"><value>Pausa cada (minutos)</value></data>
   <data name="Settings_BreakLength" xml:space="preserve"><value>Duración de la pausa (segundos)</value></data>

@@ -29,6 +29,9 @@ public partial class App : System.Windows.Application
     private DateTime _breakEndsAt;
     private readonly List<OverlayWindow> _overlays = new();
 
+    // The "break starting soon" popup; null whenever no warning is currently shown.
+    private BreakWarningWindow? _warningWindow;
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -155,6 +158,7 @@ public partial class App : System.Windows.Application
         {
             _scheduler.Disable();
             _scheduleTimer.Stop();
+            CloseWarningWindow();
         }
 
         UpdateTrayIcon();
@@ -170,6 +174,7 @@ public partial class App : System.Windows.Application
             return;
 
         _scheduler.ScheduleNextBreak(DateTime.Now);
+        CloseWarningWindow();
         Log.Write("Next break skipped");
         UpdateTooltip();
     }
@@ -267,7 +272,19 @@ public partial class App : System.Windows.Application
     private void ShowBreakWarning()
     {
         Log.Write("Break warning shown");
-        _tray.ShowBalloonTip(10000, Strings.Balloon_BreakSoonTitle, Strings.Balloon_BreakSoonMessage, WinForms.ToolTipIcon.Info);
+
+        CloseWarningWindow();
+
+        var warning = new BreakWarningWindow(_settings.AllowSkip);
+        warning.SkipRequested += (_, _) => SkipNextBreak();
+        _warningWindow = warning;
+        warning.Show();
+    }
+
+    private void CloseWarningWindow()
+    {
+        _warningWindow?.Close();
+        _warningWindow = null;
     }
 
     private void StartBreak()
@@ -278,6 +295,8 @@ public partial class App : System.Windows.Application
         Log.Write("Break started");
         _scheduler.BreakStarted();
         _breakEndsAt = DateTime.Now.AddSeconds(_settings.BreakSeconds);
+
+        CloseWarningWindow();
 
         foreach (var screen in WinForms.Screen.AllScreens)
         {
@@ -383,6 +402,7 @@ public partial class App : System.Windows.Application
     private void ExitApp()
     {
         EndBreak();
+        CloseWarningWindow();
         _scheduleTimer.Stop();
         _tray.Visible = false;
         _tray.Icon?.Dispose();
