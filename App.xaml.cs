@@ -15,6 +15,7 @@ public partial class App : System.Windows.Application
     private AppSettings _settings = null!;
     private WinForms.NotifyIcon _tray = null!;
     private WinForms.ToolStripMenuItem _activeItem = null!;
+    private WinForms.ToolStripMenuItem _skipNextItem = null!;
     private WinForms.ToolStripMenuItem _restItem = null!;
     private WinForms.ToolStripMenuItem _settingsItem = null!;
     private WinForms.ToolStripMenuItem _exitItem = null!;
@@ -27,6 +28,9 @@ public partial class App : System.Windows.Application
     private readonly DispatcherTimer _breakTimer = new();
     private DateTime _breakEndsAt;
     private readonly List<OverlayWindow> _overlays = new();
+
+    // The "break starting soon" popup; null whenever no warning is currently shown.
+    private BreakWarningWindow? _warningWindow;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -76,6 +80,7 @@ public partial class App : System.Windows.Application
         var menu = new WinForms.ContextMenuStrip();
 
         _activeItem = new WinForms.ToolStripMenuItem("", null, (_, _) => ToggleActive());
+        _skipNextItem = new WinForms.ToolStripMenuItem("", null, (_, _) => SkipNextBreak());
         _restItem = new WinForms.ToolStripMenuItem("", null, (_, _) => StartBreak());
         _settingsItem = new WinForms.ToolStripMenuItem("", null, (_, _) => ShowSettings());
         _exitItem = new WinForms.ToolStripMenuItem("", null, (_, _) => ExitApp());
@@ -83,9 +88,13 @@ public partial class App : System.Windows.Application
         menu.Items.Add(_restItem);
         menu.Items.Add(new WinForms.ToolStripSeparator());
         menu.Items.Add(_activeItem);
+        menu.Items.Add(_skipNextItem);
         menu.Items.Add(_settingsItem);
         menu.Items.Add(new WinForms.ToolStripSeparator());
         menu.Items.Add(_exitItem);
+
+        // Skipping only makes sense while the countdown is actually running.
+        menu.Opening += (_, _) => _skipNextItem.Enabled = _scheduler.Enabled && !_scheduler.BreakActive;
 
         _tray = new WinForms.NotifyIcon
         {
@@ -105,6 +114,7 @@ public partial class App : System.Windows.Application
     private void RefreshTrayTexts()
     {
         _activeItem.Text = Strings.Tray_Active;
+        _skipNextItem.Text = Strings.Tray_SkipNext;
         _restItem.Text = Strings.Tray_RestNow;
         _settingsItem.Text = Strings.Tray_Settings;
         _exitItem.Text = Strings.Tray_Exit;
@@ -148,6 +158,7 @@ public partial class App : System.Windows.Application
         {
             _scheduler.Disable();
             _scheduleTimer.Stop();
+            CloseWarningWindow();
         }
 
         UpdateTrayIcon();
@@ -155,6 +166,18 @@ public partial class App : System.Windows.Application
     }
 
     private void ToggleActive() => SetEnabled(!_scheduler.Enabled);
+
+    /// <summary>Pushes the next break back by a full interval, leaving the schedule otherwise untouched.</summary>
+    private void SkipNextBreak()
+    {
+        if (!_scheduler.Enabled || _scheduler.BreakActive)
+            return;
+
+        _scheduler.ScheduleNextBreak(DateTime.Now);
+        CloseWarningWindow();
+        Log.Write("Next break skipped");
+        UpdateTooltip();
+    }
 
     /// <summary>Applies the interval/idle-reset settings to the scheduler.</summary>
     private void ApplySchedulerSettings()
@@ -249,8 +272,19 @@ public partial class App : System.Windows.Application
     private void ShowBreakWarning()
     {
         Log.Write("Break warning shown");
-        _tray.ShowBalloonTip(10000, Strings.Balloon_BreakSoonTitle, Strings.Balloon_BreakSoonMessage, WinForms.ToolTipIcon.Info);
+
+        CloseWarningWindow();
+
+        var warning = new BreakWarningWindow(_settings.AllowSkip);
+        warning.SkipRequested += (_, _) => SkipNextBreak();
+        warning.Closed += (_, _) => _warningWindow = null;
+        _warningWindow = warning;
+        warning.Show();
     }
+
+    // The window can also close itself (background click dismisses it), so this only ever
+    // needs to ask it to close; its own Closed handler clears _warningWindow either way.
+    private void CloseWarningWindow() => _warningWindow?.Close();
 
     private void StartBreak()
     {
@@ -260,6 +294,8 @@ public partial class App : System.Windows.Application
         Log.Write("Break started");
         _scheduler.BreakStarted();
         _breakEndsAt = DateTime.Now.AddSeconds(_settings.BreakSeconds);
+
+        CloseWarningWindow();
 
         foreach (var screen in WinForms.Screen.AllScreens)
         {
@@ -365,6 +401,7 @@ public partial class App : System.Windows.Application
     private void ExitApp()
     {
         EndBreak();
+        CloseWarningWindow();
         _scheduleTimer.Stop();
         _tray.Visible = false;
         _tray.Icon?.Dispose();

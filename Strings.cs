@@ -21,6 +21,7 @@ public static class Strings
         string.Format(CultureInfo.CurrentCulture, Get(key), args);
 
     public static string Tray_Active => Get(nameof(Tray_Active));
+    public static string Tray_SkipNext => Get(nameof(Tray_SkipNext));
     public static string Tray_RestNow => Get(nameof(Tray_RestNow));
     public static string Tray_Settings => Get(nameof(Tray_Settings));
     public static string Tray_Exit => Get(nameof(Tray_Exit));
@@ -34,6 +35,7 @@ public static class Strings
 
     public static string Balloon_BreakSoonTitle => Get(nameof(Balloon_BreakSoonTitle));
     public static string Balloon_BreakSoonMessage => Get(nameof(Balloon_BreakSoonMessage));
+    public static string BreakWarning_SkipButton => Get(nameof(BreakWarning_SkipButton));
 
     public static string Settings_Title => Get(nameof(Settings_Title));
     public static string Settings_BreakEvery => Get(nameof(Settings_BreakEvery));

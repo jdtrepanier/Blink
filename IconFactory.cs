@@ -2,6 +2,9 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Windows;
+using System.Windows.Interop;
+using System.Windows.Media.Imaging;
 
 namespace Blink;
 
@@ -26,6 +29,29 @@ public static class IconFactory
             // Clone into a managed Icon so we can free the native handle immediately.
             using var tmp = Icon.FromHandle(hicon);
             return (Icon)tmp.Clone();
+        }
+        finally
+        {
+            NativeMethods.DestroyIcon(hicon);
+        }
+    }
+
+    /// <summary>
+    /// Renders the artwork as a WPF bitmap for use in XAML (e.g. an <c>Image</c> control).
+    /// Draws directly at <paramref name="size"/> rather than going through the multi-resolution
+    /// .ico file, so it stays crisp instead of stretching up from whichever frame WPF happens to pick.
+    /// </summary>
+    public static BitmapSource CreateSleepyEyeImageSource(int size, bool paused = false)
+    {
+        using var bmp = CreateBitmap(size, paused);
+        var hicon = bmp.GetHicon();
+        try
+        {
+            // GetHicon (not GetHbitmap) is what preserves the artwork's per-pixel alpha -
+            // GetHbitmap would flatten the transparent background to opaque black.
+            var source = Imaging.CreateBitmapSourceFromHIcon(hicon, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+            source.Freeze();
+            return source;
         }
         finally
         {
