@@ -131,6 +131,30 @@ public class BreakSchedulerTests
     }
 
     [Fact]
+    public void Unlock_LongLockAfterWarningShown_NoLongerHasActiveWarning()
+    {
+        // Regression test: the "break starting in 1 minute" popup stayed on screen after the
+        // machine was locked long enough (>= idle threshold) for the countdown to reset on
+        // unlock. The warning belongs to the old countdown, so once the countdown is reset the
+        // scheduler must report that no warning is active, letting the app dismiss the popup.
+        var scheduler = CreateEnabled(TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(5));
+
+        var warningTime = Start + TimeSpan.FromMinutes(29);
+        var warningTick = scheduler.Tick(warningTime, TimeSpan.Zero);
+        Assert.True(warningTick.ShouldShowWarning);
+        Assert.True(scheduler.WarningActive); // popup is on screen
+
+        var lockTime = warningTime + TimeSpan.FromSeconds(58); // 2 seconds before the break
+        scheduler.Lock(lockTime);
+
+        var unlockTime = lockTime + TimeSpan.FromMinutes(5) + TimeSpan.FromSeconds(37);
+        var unlockResult = scheduler.Unlock(unlockTime);
+
+        Assert.Equal(BreakScheduler.UnlockAction.Reset, unlockResult.Action);
+        Assert.False(scheduler.WarningActive);
+    }
+
+    [Fact]
     public void Unlock_WithoutPriorLock_IsIgnored()
     {
         var scheduler = CreateEnabled(TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(5));

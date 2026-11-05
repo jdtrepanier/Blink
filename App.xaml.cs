@@ -193,7 +193,10 @@ public partial class App : System.Windows.Application
         var result = _scheduler.Tick(DateTime.Now, IdleTime.GetIdleTime());
 
         if (result.IdleResetTriggered)
+        {
             Log.Write($"Idle for {result.IdleDuration:mm\\:ss}: countdown reset");
+            CloseWarningWindow();
+        }
 
         if (result.ShouldShowWarning && _settings.WarnBeforeBreak)
             ShowBreakWarning();
@@ -260,6 +263,9 @@ public partial class App : System.Windows.Application
                 return;
             case BreakScheduler.UnlockAction.Reset:
                 Log.Write($"Unlocked after {result.LockedDuration:mm\\:ss}: countdown reset");
+
+                // The warning popup belongs to the countdown that was just discarded.
+                CloseWarningWindow();
                 break;
             case BreakScheduler.UnlockAction.Resumed:
                 Log.Write($"Unlocked after {result.LockedDuration:mm\\:ss}: resumed with {result.Remaining:mm\\:ss} remaining");
