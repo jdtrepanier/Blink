@@ -17,6 +17,9 @@ public sealed class BreakScheduler
     public bool BreakActive { get; private set; }
     public DateTime NextBreakAt { get; private set; }
 
+    /// <summary>True from the moment a warning is raised until it no longer applies to the current countdown.</summary>
+    public bool WarningActive { get; private set; }
+
     private DateTime? _lockedAt;
     private TimeSpan _remainingAtLock;
 
@@ -32,12 +35,19 @@ public sealed class BreakScheduler
         ScheduleNextBreak(now);
     }
 
-    public void Disable() => Enabled = false;
+    public void Disable()
+    {
+        Enabled = false;
+        WarningActive = false;
+    }
 
     public void ScheduleNextBreak(DateTime now)
     {
         NextBreakAt = now + Interval;
         _warningArmed = true;
+
+        // Any warning on screen belongs to the previous countdown.
+        WarningActive = false;
     }
 
     public TimeSpan TimeUntilNextBreak(DateTime now)
@@ -74,6 +84,7 @@ public sealed class BreakScheduler
         if (_warningArmed && remaining <= WarningLeadTime && remaining > TimeSpan.Zero)
         {
             _warningArmed = false;
+            WarningActive = true;
             shouldShowWarning = true;
         }
 
@@ -123,7 +134,11 @@ public sealed class BreakScheduler
         return new UnlockResult(UnlockAction.Resumed, lockedDuration, _remainingAtLock);
     }
 
-    public void BreakStarted() => BreakActive = true;
+    public void BreakStarted()
+    {
+        BreakActive = true;
+        WarningActive = false;
+    }
 
     public void BreakEnded(DateTime now)
     {
